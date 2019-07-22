@@ -1,0 +1,46 @@
+<h1 class="mt-4">Admin Dashboard</h1>
+
+    <form id="searchData" method="POST" action="/admin">
+
+        <% if (users.length > 0) { %>
+            <ul class="list-group"></ul>
+            <% for (let i = 0; i < users.length; i++) { %>
+                <li class="list-group-item">
+
+                    <label name="<%-users[i].email%>"> <%- users[i].email%> </label>
+                    <label name="<%- users[i].name%>"> <%- users[i].name%> </label>
+                    <label name="<%- users[i].telephone%>"> <%- users[i].telephone%> </label>
+                    <label name="<%- users[i].name%>"> <%- users[i].name%> </label>
+
+                    <!-- Default inline 1-->
+                    <div class="custom-control custom-checkbox">
+                        <% if (users[i].approval === 'false' || users[i].approval === false) { %>
+                            <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_approve" name="<%-users[i].email%>_approve">
+                            <label class="custom-control-label" for="<%-users[i].email%>_approve">approved</label>
+                        <% } else { %>
+                            <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_approve" name="<%-users[i].email%>_approve" checked >
+                            <label class="custom-control-label" for="<%-users[i].email%>_approve">approved</label>
+                        <% } %>
+                    </div>
+                
+                    <!-- Default inline 2-->
+                    <div class="custom-control custom-checkbox">
+                        <% if (users[i].approval === 'true' || users[i].approval === true) { %>
+                            <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_disapprove" name="<%-users[i].email%>_disapprove">
+                            <label class="custom-control-label" for="<%-users[i].email%>_disapprove">not approved</label>
+                        <% } else { %>
+                            <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_disapprove" name="<%-users[i].email%>_disapprove" checked >
+                            <label class="custom-control-label" for="<%-users[i].email%>_disapprove">not approved</label>
+                        <% } %>
+                    </div>
+
+                </li>
+            <% } %>
+            </ul>
+        <% } %>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+
+
+<a href="/users/logout" class="btn btn-secondary">Logout</a> 
