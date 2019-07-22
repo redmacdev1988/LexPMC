@@ -1,0 +1,40 @@
+
+<% if (user.isAttorney) { %>
+    <% if (freelancers.length > 0) { %>
+        <h1>There are <%- freelancers.length %> freelancers for you to choose from</h1>
+    <% } %>
+
+    <div class="list-group">
+        <% for(let i = 0; i < freelancers.length; i++) { %>
+            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1"><%- freelancers[i].name%> 
+                    <% if (freelancers[i].legalSearchKnowHow) { %> 
+                        <span class="badge badge-success">
+                        Online Legal Research
+                        </span>
+                    <% } %> 
+                </h5>
+
+                <p>
+                <% if (freelancers[i].undergraduateCheckBox && freelancers[i].undergraduateInstitution !== "") { %>
+                <%- freelancers[i].undergraduateInstitution %>,
+                <% } %>  
+                    <span>
+                    <% if (freelancers[i].undergradDegreeReceivedCheckBox && freelancers[i].undergraduateGradDate !== "") { %>
+                    <%- freelancers[i].undergraduateGradDate %>
+                    <% } %>
+                    </span>
+                </p>
+                
+                <% var cleanDate = moment(freelancers[i].date); %>
+                <small>member since <%- cleanDate.format('MMM-DD-YY'); %></small>
+                </div>
+
+                <small><%- freelancers[i].skills%></small>
+            </a>
+        <% } %>
+    </div>
+<% } else { %>
+    Sorry, only Attorneys allowed
+<% } %>

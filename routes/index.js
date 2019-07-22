@@ -2,20 +2,38 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../config/auth');
 const User = require('../models/User');
+var moment = require('moment');
 
 // Welcome Page
 router.get('/', (req, res) => {
     //res.send('Welcome'); 
     console.log(`≈ routes/index.js - GET on / `);
-
-    User.find({ approval: true})
-    .then((arrOfData, error) => {
-        return res.render('welcome', {
-            users: arrOfData
-        });
-    });
+    return res.render('welcome');
 });
 
+router.get('/listing', (req, res) => {
+    console.log(' - Get on listing /');
+
+    console.log(req.user);
+
+    if (req.user) {
+        if(req.user.isAttorney) {
+            User.find({approval: true, isFreelancer: true})
+            .then((freelancers, error) => {
+                return res.render('listing', {
+                    freelancers,
+                    user: req.user,
+                    moment
+                });
+            });
+        } else {
+            res.send('sorry, only attorneys allowed');
+        }
+    } else {
+        res.send('please log in or register');
+    }
+    
+});
 
 router.get('/admin', (req, res) => {
     console.log(' you reached GET on /admin');
@@ -82,6 +100,8 @@ router.get('/dashboard', ensureAuthenticated, (req, res) => {
                 isAttorney: req.user.isAttorney,
                 _message: '',
             });
+        } else {
+            return res.send('uh oh, neither attorney or freelancer checked');
         }
     } else {
         User.find({})
