@@ -45,7 +45,8 @@ router.post('/admin', (req, res) => {
         User.find({})
         .then((arrOfData, error) => {
             return res.render('admin', {
-                users: arrOfData
+                users: arrOfData,
+                _message: 'saved',
             });
         });
     });
@@ -54,11 +55,7 @@ router.post('/admin', (req, res) => {
 // dashboard Page
 router.get('/dashboard', ensureAuthenticated, (req, res) => {
     console.log(`≈ routes/index.js - GET on  /dashboard `);
-
-    console.log(req.user.isFreelancer);
-    console.log(req.user.isAttorney);
-    console.log(req.user.name);
-    if (req.user.name !== 'admin' && req.user.email !== 'admin@gmail.com') {
+    if (req.user.name !== 'admin' && req.user.email !== 'rtsao6680@gmail.com') {
          if (req.user.isFreelancer) {
             return res.render('dashboard', {
                 name: req.user.name,
@@ -90,7 +87,8 @@ router.get('/dashboard', ensureAuthenticated, (req, res) => {
         User.find({})
         .then((arrOfData, error) => {
             return res.render('admin', {
-                users: arrOfData
+                users: arrOfData,
+                _message: '',
             });
         });
     }
