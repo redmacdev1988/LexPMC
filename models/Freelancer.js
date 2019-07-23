@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
-console.log(`∆ models/User.js - mongoose required`);
+
+const USER_TYPE_FREELANCER = "freelancer";
+const USER_TYPE_ATTORNEY = "attorney";
 
 // create schema
-const UserSchema = new mongoose.Schema({
+const FreelancerSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -52,6 +54,11 @@ const UserSchema = new mongoose.Schema({
         default: false,
     },
 
+    userType: {
+        type: String,
+        default: USER_TYPE_FREELANCER,
+    },
+
     isAttorney: {
         type: Boolean,
         default: false
@@ -63,5 +70,5 @@ const UserSchema = new mongoose.Schema({
     }
 });
 
-const User = mongoose.model('User', UserSchema);
-module.exports = User;
+const Freelancer = mongoose.model('Freelancer', FreelancerSchema);
+module.exports = Freelancer;

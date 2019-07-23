@@ -1,8 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+
+const Freelancer = require('../models/Freelancer');
+const Attorney = require('../models/Attorney');
+
 const passport = require('passport');
+
+const USER_TYPE_FREELANCER = "freelancer";
+const USER_TYPE_ATTORNEY = "attorney";
+
 // Login Page
 router.get('/login', (req, res) => {
     console.log(`routes/users.js - about to render view/login.ejs`);
@@ -20,7 +27,8 @@ router.post('/register', (req, res) => {
     
     const { name, email, password, password2, isAttorney, isFreelancer } = req.body;
     let bFreelancer = (isFreelancer == 'on') ? true: false;
-    let bAttorney = (isAttorney == 'on') ? true: false;
+
+    let userType = (bFreelancer) ? USER_TYPE_FREELANCER : USER_TYPE_ATTORNEY;
 
     let errors = [];
     if (!email || !name || !password || !password2) { errors.push({msg: 'please fill in all fields'}); }
@@ -35,72 +43,110 @@ router.post('/register', (req, res) => {
             email,
             password,
             password2,
-            isAttorney: bAttorney,
-            isFreelancer: bFreelancer,
+            userType
         }); // re-render form in error
     } else {
 
         console.log('users.js - validation passed');
 
-        User.findOne({ email })
-        .then(user => {
-            if (user) {
-                console.log('user.js - user exists. render error');
-                // re-render form and send error
-                // because user with this email already exists
-                errors.push({ msg: 'Email is already reigstered'});
+        if (userType === USER_TYPE_FREELANCER) {
+            Freelancer.findOne({ email })
+            .then(user => {
+                if (user) {
+                    errors.push({ msg: 'Email is already reigstered'});
+                    res.render('register', {
+                        errors,
+                        name,
+                        email,
+                        password,
+                        password2,
+                        userType
+                    }); // re-render form in error
+                } else {
+                    // create instance
+                    const newUser = new Freelancer({
+                        name,
+                        email,
+                        password,
+                        userType
+                    });
 
-                console.log(`routes/users.js - about to render view/register.ejs with error[] params`);
-                res.render('register', {
-                    errors,
-                    name,
-                    email,
-                    password,
-                    password2,
-                    isAttorney: bAttorney,
-                    isFreelancer: bFreelancer
-                }); // re-render form in error
-            } else {
-                console.log('user.js - user does not exist. lets just add it to the db');
-                // encrypt password
+                    bcrypt.genSalt(10, (err, salt) => {
+                        bcrypt.hash(newUser.password, salt, (err, hash) => {
+                            if (err) throw err;
+                            newUser.password = hash;
+                            newUser.save().then(user => {
+                                if (user) console.log('users.js - user saved successfully');
+                                req.flash('success_msg', 'You are now registered and can log in');
+                                res.redirect('/users/login');
+                            }).catch(err => console.log(err));
+                        })
+                    });
+                }
+            });
+        } else if (userType === USER_TYPE_ATTORNEY) {
 
-                // create instance
-                const newUser = new User({
-                    name,
-                    email,
-                    password,
-                    isAttorney: bAttorney,
-                    isFreelancer: bFreelancer
-                });
+            Attorney.findOne({ email })
+            .then(user => {
+                if (user) {
+                    errors.push({ msg: 'Email is already reigstered'});
+                    res.render('register', {
+                        errors,
+                        name,
+                        email,
+                        password,
+                        password2,
+                        userType
+                    }); // re-render form in error
+                } else {
+                    // create instance
+                    const newUser = new Attorney({
+                        name,
+                        email,
+                        password,
+                        userType
+                    });
 
-                bcrypt.genSalt(10, (err, salt) => {
-                    bcrypt.hash(newUser.password, salt, (err, hash) => {
-                        if (err) throw err;
-                        console.log('users.js - set password to hashed');
-                        newUser.password = hash;
-                        console.log('users.js - save user');
-                        console.log(newUser);
+                    bcrypt.genSalt(10, (err, salt) => {
+                        bcrypt.hash(newUser.password, salt, (err, hash) => {
+                            if (err) throw err;
+                            newUser.password = hash;
+                            newUser.save().then(user => {
+                                if (user) console.log('users.js - attorney saved successfully');
+                                req.flash('success_msg', 'You are now registered and can log in');
+                                res.redirect('/users/login');
+                            }).catch(err => console.log(err));
+                        })
+                    });
+                }
+            });
 
-                        newUser.save().then(user => {
-                            if (user) console.log('users.js - user saved successfully');
-                            req.flash('success_msg', 'You are now registered and can log in');
-                            res.redirect('/users/login');
-                        }).catch(err => console.log(err));
-                    })
-                });
-            }
-        });
+
+        } // attorney
     }
 });
 
 // Login Handle
 router.post('/login', (req, res, next) => {
     console.log('users.js - /login ');
-    passport.authenticate('local', {
-        successRedirect: '/dashboard',
-        failureRedirect: '/users/login',
-        failureFlash: true
-    })(req, res, next);
+
+    console.log('-- req.body --');
+    console.log(req.body);
+
+    if (req.body.freelancer === 'on' || req.body.freelancer) {
+        passport.authenticate('local-freelance', {
+            successRedirect: '/dashboard',
+            failureRedirect: '/users/login',
+            failureFlash: true
+        })(req, res, next);
+    } else {
+        passport.authenticate('local-attorney', {
+            successRedirect: '/dashboard',
+            failureRedirect: '/users/login',
+            failureFlash: true
+        })(req, res, next);
+    }
+
 });
 
 

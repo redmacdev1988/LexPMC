@@ -32,6 +32,10 @@ app.use(session({
     saveUninitialized: true
 }));
 
+// declare public folder.
+// Note: always be above passport
+app.use('/public', express.static('public'));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -48,8 +52,6 @@ app.use('/', require('./routes/index'));
 app.use('/users', require('./routes/users'));
 console.log(`√ route folder files declared for / and /users`);
 
-// declare public folder
-app.use('/public', express.static('public'));
 
 
 const PORT = process.env.PORT || 5000;

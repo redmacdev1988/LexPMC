@@ -1,8 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../config/auth');
-const User = require('../models/User');
+
+const Freelancer = require('../models/Freelancer');
+const Attorney = require('../models/Attorney');
+
 var moment = require('moment');
+
+const USER_TYPE_FREELANCER = "freelancer";
+const USER_TYPE_ATTORNEY = "attorney";
 
 // Welcome Page
 router.get('/', (req, res) => {
@@ -13,12 +19,9 @@ router.get('/', (req, res) => {
 
 router.get('/listing', (req, res) => {
     console.log(' - Get on listing /');
-
-    console.log(req.user);
-
     if (req.user) {
-        if(req.user.isAttorney) {
-            User.find({approval: true, isFreelancer: true})
+        if(req.user.userType === USER_TYPE_ATTORNEY) {
+            Freelancer.find({approval: true, userType: USER_TYPE_FREELANCER})
             .then((freelancers, error) => {
                 return res.render('listing', {
                     freelancers,
@@ -47,7 +50,7 @@ router.post('/admin', (req, res) => {
         let email = data[0];
         let bApprove = data[1];
         promises.push(
-            User.findOne({ email })
+            Freelancer.findOne({ email })
             .then ((found, error) => {
                 if (found && !error) {
                     found['approval'] = (bApprove === 'approve') ? true : false;
@@ -60,7 +63,7 @@ router.post('/admin', (req, res) => {
     Promise.all(promises)
     .then(() => {
         console.log('all done nikka!... find all Users, then go to admin template');
-        User.find({})
+        Freelancer.find({})
         .then((arrOfData, error) => {
             return res.render('admin', {
                 users: arrOfData,
@@ -74,7 +77,7 @@ router.post('/admin', (req, res) => {
 router.get('/dashboard', ensureAuthenticated, (req, res) => {
     console.log(`≈ routes/index.js - GET on  /dashboard `);
     if (req.user.name !== 'admin' && req.user.email !== 'rtsao6680@gmail.com') {
-         if (req.user.isFreelancer) {
+         if (req.user.userType === USER_TYPE_FREELANCER) {
             return res.render('dashboard', {
                 name: req.user.name,
                 email: req.user.email,
@@ -86,25 +89,23 @@ router.get('/dashboard', ensureAuthenticated, (req, res) => {
                 undergradDegreeReceivedCheckBox: req.user.undergradDegreeReceivedCheckBox,
                 undergraduateGradDate: req.user.undergraduateGradDate,
                 legalSearchKnowHow: req.user.legalSearchKnowHow,
-                isFreelancer: req.user.isFreelancer,
-                isAttorney: req.user.isAttorney,
+                userType: req.user.userType,
                 _message: '',
             });
-        } else if (req.user.isAttorney) {
+        } else if (req.user.userType === USER_TYPE_ATTORNEY) {
             return res.render('dashboard', {
                 name: req.user.name,
                 email: req.user.email,
                 approval: req.user.approval,
                 telephone: req.user.telephone,
-                isFreelancer: req.user.isFreelancer,
-                isAttorney: req.user.isAttorney,
+                userType: req.user.userType,
                 _message: '',
             });
         } else {
             return res.send('uh oh, neither attorney or freelancer checked');
         }
     } else {
-        User.find({})
+        Freelancer.find({})
         .then((arrOfData, error) => {
             return res.render('admin', {
                 users: arrOfData,
@@ -119,13 +120,26 @@ router.post("/dashboard", (req, res) => {
     console.log(`≈ routes/index.js - POST on  /dashboard `);
 
     console.log(`trying to find ${req.body.email}`);
-    User.findOne({ email: req.body.email })
-    .then( (found,error) => {
 
-       if (found) {
+    const { userType } = req.body;
+
+    console.log(req.body);
+
+
+
+    let promise;
+
+    if (userType == USER_TYPE_FREELANCER) {
+        promise = Freelancer.findOne({ email: req.body.email });
+    } else if (userType == USER_TYPE_ATTORNEY) {
+        promise = Attorney.findOne({ email: req.body.email });
+    }
+
+    promise.then( (found,error) => {
+    if (found) {
             console.log(found);
-            if (found['isFreelancer']) {
-                console.log('lets save this freelancer!!!');
+            if (found['userType'] === USER_TYPE_FREELANCER) {
+
                 found['undergraduateCheckBox'] = (req.body.undergraduateCheckBox === 'on') ? true : false;
                 found['undergraduateInstitution'] = req.body.undergraduateInstitution;
                 found['undergradDegreeReceivedCheckBox'] = (req.body.undergradDegreeReceivedCheckBox === 'on') ? true: false;
@@ -156,39 +170,33 @@ router.post("/dashboard", (req, res) => {
                             undergradDegreeReceivedCheckBox: found['undergradDegreeReceivedCheckBox'],
                             undergraduateGradDate: found['undergraduateGradDate'],
                             legalSearchKnowHow: found['legalSearchKnowHow'],
-                            isFreelancer: req.user.isFreelancer,
-                            isAttorney: req.user.isAttorney,
+                            userType: req.user.userType,
                             _message: 'saved',
                         });
                     }
                 });
-            } else if (found['isAttorney']) {
-                console.log('letssave this attorney');
+            } else if (found['userType'] === USER_TYPE_ATTORNEY) {
                 found['telephone'] = req.body.telephone;
-
                 found.save(err => {
-                    if (err) {
-                        console.log(error);
-                    } else {
+                    if (err) { console.log(error); } 
+                    else {
                         return res.render('dashboard', {
                             name: req.body.name,
                             email: req.body.email,
                             approval: req.body.approval,
                             telephone: found['telephone'],
-                            isFreelancer: req.user.isFreelancer,
-                            isAttorney: req.user.isAttorney,
+                            userType: req.user.userType,
                             _message: 'saved',
                         });
                     }
                 });
             }
-       } else {
-           console.log('not found');
-       }
+    } else { console.log('not found'); }
     })
     .catch(err => {
         res.status(400).send('routes/index.js - Unable to save to database: ' + err);
     });
+   
 });
 
 module.exports = router;
