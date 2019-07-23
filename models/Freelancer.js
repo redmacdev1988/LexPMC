@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
 const USER_TYPE_FREELANCER = "freelancer";
-const USER_TYPE_ATTORNEY = "attorney";
 
 // create schema
 const FreelancerSchema = new mongoose.Schema({

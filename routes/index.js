@@ -9,6 +9,7 @@ var moment = require('moment');
 
 const USER_TYPE_FREELANCER = "freelancer";
 const USER_TYPE_ATTORNEY = "attorney";
+const USER_TYPE_ADMIN = "admin";
 
 // Welcome Page
 router.get('/', (req, res) => {
@@ -45,74 +46,145 @@ router.get('/admin', (req, res) => {
 router.post('/admin', (req, res) => {
     console.log(' you reached POST on /admin');
     var promises = [];
+
+    console.log('--req.body--');
+    console.log(req.body);
+
+    let typeArr = req.body.userType;
+    
     Object.keys(req.body).forEach(function(key,index) {
-        let data = key.split('_');
-        let email = data[0];
-        let bApprove = data[1];
-        promises.push(
-            Freelancer.findOne({ email })
-            .then ((found, error) => {
-                if (found && !error) {
-                    found['approval'] = (bApprove === 'approve') ? true : false;
-                    found.save(err => { if (!err) {} });
-                }
-            }).catch(err => { res.status(400).send('routes/index.js - Unable to save to database: ' + err); })
-        );
+
+        console.log('-- key --');
+        console.log(key);
+        
+        if (key !== 'userType') {
+
+            let data = key.split('_');
+            let email = data[0];
+            let bApprove = data[1];
+            let userType = typeArr[index-1];
+
+            console.log(`[${index-1}] ---> ${email}, ${bApprove}, ${userType}`);
+
+            
+            if (userType === USER_TYPE_FREELANCER) {
+                promises.push(
+                    Freelancer.findOne({ email })
+                    .then ((found, error) => {
+                        if (found && !error) {
+                            found['approval'] = (bApprove === 'approve') ? true : false;
+                            found.save(err => { 
+                                if (!err) {
+                                    return true;
+                                } else {
+                                    console.log(err);
+                                    return false;
+                                }
+                            });
+                            return found;
+                        }
+                    }).catch(err => { res.status(400).send('routes/index.js - Unable to save to database: ' + err); })
+                );
+            } else if (userType === USER_TYPE_ATTORNEY) {
+                promises.push(
+                    Attorney.findOne({ email })
+                    .then ((found, error) => {
+                        if (found && !error) {
+                            console.log(`found: ${email}`);
+                            found['approval'] = (bApprove === 'approve') ? true : false;
+                            found.save(err => { 
+                                if (!err) {
+                                    return true;
+                                } else {
+                                    console.log(err);
+                                    return false;
+                                }
+                            });
+                            return found;
+                        }
+                    }).catch(err => { res.status(400).send('routes/index.js - Unable to save to database: ' + err); })
+                );
+            }
+        } else { console.log('keep interating the keys'); }
     });
 
-    Promise.all(promises)
-    .then(() => {
-        console.log('all done nikka!... find all Users, then go to admin template');
-        Freelancer.find({})
-        .then((arrOfData, error) => {
+    console.log(`..by way of Promise ALL: there are ${promises.length} promises to be processed`);
+
+
+    Promise.all(promises).then((values) => {
+
+        let promises2 = [];
+        promises2.push(
+            Freelancer.find({}).then((freelancers, error) => {return freelancers;})
+        )
+        promises2.push(
+            Attorney.find({}).then((attornies, error) => {return attornies;})
+        );
+        Promise.all(promises2)
+        .then((values) => {
             return res.render('admin', {
-                users: arrOfData,
+                users: flatten(values),
                 _message: 'saved',
-            });
+            }); 
         });
     });
 });
 
+
+function flatten(arr) {
+    return arr.reduce(function (flat, toFlatten) {
+      return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
+    }, []);
+  }
+
+
 // dashboard Page
 router.get('/dashboard', ensureAuthenticated, (req, res) => {
     console.log(`≈ routes/index.js - GET on  /dashboard `);
-    if (req.user.name !== 'admin' && req.user.email !== 'rtsao6680@gmail.com') {
-         if (req.user.userType === USER_TYPE_FREELANCER) {
-            return res.render('dashboard', {
-                name: req.user.name,
-                email: req.user.email,
-                approval: req.user.approval,
-                telephone: req.user.telephone,
-                skills: req.user.skills,
-                undergraduateCheckBox: req.user.undergraduateCheckBox,
-                undergraduateInstitution: req.user.undergraduateInstitution,
-                undergradDegreeReceivedCheckBox: req.user.undergradDegreeReceivedCheckBox,
-                undergraduateGradDate: req.user.undergraduateGradDate,
-                legalSearchKnowHow: req.user.legalSearchKnowHow,
-                userType: req.user.userType,
-                _message: '',
-            });
-        } else if (req.user.userType === USER_TYPE_ATTORNEY) {
-            return res.render('dashboard', {
-                name: req.user.name,
-                email: req.user.email,
-                approval: req.user.approval,
-                telephone: req.user.telephone,
-                userType: req.user.userType,
-                _message: '',
-            });
-        } else {
-            return res.send('uh oh, neither attorney or freelancer checked');
-        }
-    } else {
-        Freelancer.find({})
-        .then((arrOfData, error) => {
-            return res.render('admin', {
-                users: arrOfData,
-                _message: '',
-            });
+    
+    if (req.user.userType === USER_TYPE_FREELANCER) {
+        return res.render('dashboard', {
+            name: req.user.name,
+            email: req.user.email,
+            approval: req.user.approval,
+            telephone: req.user.telephone,
+            skills: req.user.skills,
+            undergraduateCheckBox: req.user.undergraduateCheckBox,
+            undergraduateInstitution: req.user.undergraduateInstitution,
+            undergradDegreeReceivedCheckBox: req.user.undergradDegreeReceivedCheckBox,
+            undergraduateGradDate: req.user.undergraduateGradDate,
+            legalSearchKnowHow: req.user.legalSearchKnowHow,
+            userType: req.user.userType,
+            _message: '',
         });
+    } else if (req.user.userType === USER_TYPE_ATTORNEY) {
+        return res.render('dashboard', {
+            name: req.user.name,
+            email: req.user.email,
+            approval: req.user.approval,
+            telephone: req.user.telephone,
+            userType: req.user.userType,
+            _message: '',
+        });
+    }  else if (req.user.userType === USER_TYPE_ADMIN) {
+        let promises = [];
+        promises.push(
+            Freelancer.find({}).then((freelancers, error) => {return freelancers;})
+        );
+        promises.push(
+            Attorney.find({}).then((attornies, error) => { return attornies;})
+        )
+        Promise.all(promises).then((values) => {
+            return res.render('admin', {
+                users: flatten(values),
+                _message: '',
+            });
+        })
+        .catch(error=>console.log(error));
+    } else {
+        return res.send('uh oh, neither attorney or freelancer checked');
     }
+   
 });
 
 
@@ -125,15 +197,15 @@ router.post("/dashboard", (req, res) => {
 
     console.log(req.body);
 
-
-
     let promise;
 
     if (userType == USER_TYPE_FREELANCER) {
         promise = Freelancer.findOne({ email: req.body.email });
     } else if (userType == USER_TYPE_ATTORNEY) {
         promise = Attorney.findOne({ email: req.body.email });
-    }
+    } else if (userType == USER_TYPE_ADMIN) {
+        promise = Admin.findOne({ email: req.body.email });
+    } 
 
     promise.then( (found,error) => {
     if (found) {
@@ -176,6 +248,21 @@ router.post("/dashboard", (req, res) => {
                     }
                 });
             } else if (found['userType'] === USER_TYPE_ATTORNEY) {
+                found['telephone'] = req.body.telephone;
+                found.save(err => {
+                    if (err) { console.log(error); } 
+                    else {
+                        return res.render('dashboard', {
+                            name: req.body.name,
+                            email: req.body.email,
+                            approval: req.body.approval,
+                            telephone: found['telephone'],
+                            userType: req.user.userType,
+                            _message: 'saved',
+                        });
+                    }
+                });
+            } else if (found['userType'] === USER_TYPE_ADMIN) {
                 found['telephone'] = req.body.telephone;
                 found.save(err => {
                     if (err) { console.log(error); } 

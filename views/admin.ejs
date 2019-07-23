@@ -21,13 +21,17 @@
                         <label name="<%- users[i].name%>"> <%- users[i].name%> </label>
                         <label name="<%- users[i].telephone%>"> <%- users[i].telephone%> </label>
 
+                        <input type="hidden" class="custom-control-input" id="userType" name="userType" value="<%-users[i].userType%>">
+
                         <!-- Default inline 1-->
                         <div class="custom-control custom-checkbox">
                             <% if (users[i].approval === 'false' || users[i].approval === false) { %>
+                                <!-- approved box should be empty -->
                                 <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_approve" name="<%-users[i].email%>_approve">
                                 <label class="custom-control-label" for="<%-users[i].email%>_approve">approved</label>
                             <% } else { %>
-                                <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_approve" name="<%-users[i].email%>_approve" checked >
+                                <!-- approved box should be checked -->
+                                <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_approve" name="<%-users[i].email%>_approve" checked>
                                 <label class="custom-control-label" for="<%-users[i].email%>_approve">approved</label>
                             <% } %>
                         </div>
@@ -38,7 +42,7 @@
                                 <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_disapprove" name="<%-users[i].email%>_disapprove">
                                 <label class="custom-control-label" for="<%-users[i].email%>_disapprove">not approved</label>
                             <% } else { %>
-                                <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_disapprove" name="<%-users[i].email%>_disapprove" checked >
+                                <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_disapprove" name="<%-users[i].email%>_disapprove" checked>
                                 <label class="custom-control-label" for="<%-users[i].email%>_disapprove">not approved</label>
                             <% } %>
                         </div>

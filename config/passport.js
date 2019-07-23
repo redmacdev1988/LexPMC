@@ -5,9 +5,11 @@ const bcrypt = require('bcryptjs');
 
 const Freelancer = require('../models/Freelancer');
 const Attorney = require('../models/Attorney');
+const Admin = require('../models/Admin');
 
 const USER_TYPE_FREELANCER = "freelancer";
 const USER_TYPE_ATTORNEY = "attorney";
+const USER_TYPE_ADMIN = "admin";
 
 // passport object gets passed in from app.js
 
@@ -56,6 +58,31 @@ module.exports = function(passport) {
     );
 
 
+    passport.use('local-admin',
+        new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
+            console.log(`config/pasport.js - LocalStrategy....for admin ${email}`);
+
+            Admin.findOne({ email })
+            .then(user => { 
+                console.log('--- result from findOne in Admin ----');
+                console.log(user);
+                
+                if (!user) { return done(null, false, { message: 'That email is not registered'} );} 
+
+                bcrypt.compare(password, user.password, (err, isMatch) => {
+                    if (err) throw err;
+                    if (isMatch) {
+                        console.log('config/passport.js - passwords matches √ ');
+                        return done(null, user);
+                    } else {
+                        console.log('config/passport.js - passwords DOES NOT match X ');
+                        return done(null, false, { message: 'password incorrect'});
+                    }
+                });
+            }).catch(err => console.log(err))
+        })
+    );
+
 
     // The user id (you provide as the second argument of the done function) is saved in the session 
     // and is later used to retrieve the whole object via the deserializeUser function.
@@ -93,6 +120,11 @@ module.exports = function(passport) {
             });
         } else if (userInfo.type === USER_TYPE_FREELANCER) {
             Freelancer.findById(userInfo.id, function(err, user) {
+                done(err, user);
+            });
+        } else if (userInfo.type === USER_TYPE_ADMIN) {
+            console.log('find this admin');
+            Admin.findById(userInfo.id, function(err, user) {
                 done(err, user);
             });
         }

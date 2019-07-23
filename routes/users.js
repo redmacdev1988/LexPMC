@@ -4,11 +4,13 @@ const bcrypt = require('bcryptjs');
 
 const Freelancer = require('../models/Freelancer');
 const Attorney = require('../models/Attorney');
+const Admin = require('../models/Admin');
 
 const passport = require('passport');
 
 const USER_TYPE_FREELANCER = "freelancer";
 const USER_TYPE_ATTORNEY = "attorney";
+const USER_TYPE_ADMIN = "admin";
 
 // Login Page
 router.get('/login', (req, res) => {
@@ -27,8 +29,14 @@ router.post('/register', (req, res) => {
     
     const { name, email, password, password2, isAttorney, isFreelancer } = req.body;
     let bFreelancer = (isFreelancer == 'on') ? true: false;
+    let bAttorney = (isAttorney == 'on') ? true: false;
 
-    let userType = (bFreelancer) ? USER_TYPE_FREELANCER : USER_TYPE_ATTORNEY;
+    let userType;
+    if (!bFreelancer && !bAttorney) {
+        userType = USER_TYPE_ADMIN;
+    } else {
+        userType = (bFreelancer) ? USER_TYPE_FREELANCER : USER_TYPE_ATTORNEY;
+    }
 
     let errors = [];
     if (!email || !name || !password || !password2) { errors.push({msg: 'please fill in all fields'}); }
@@ -46,83 +54,69 @@ router.post('/register', (req, res) => {
             userType
         }); // re-render form in error
     } else {
-
         console.log('users.js - validation passed');
-
+        let promise;
         if (userType === USER_TYPE_FREELANCER) {
-            Freelancer.findOne({ email })
-            .then(user => {
-                if (user) {
-                    errors.push({ msg: 'Email is already reigstered'});
-                    res.render('register', {
-                        errors,
-                        name,
-                        email,
-                        password,
-                        password2,
-                        userType
-                    }); // re-render form in error
-                } else {
-                    // create instance
-                    const newUser = new Freelancer({
-                        name,
-                        email,
-                        password,
-                        userType
-                    });
-
-                    bcrypt.genSalt(10, (err, salt) => {
-                        bcrypt.hash(newUser.password, salt, (err, hash) => {
-                            if (err) throw err;
-                            newUser.password = hash;
-                            newUser.save().then(user => {
-                                if (user) console.log('users.js - user saved successfully');
-                                req.flash('success_msg', 'You are now registered and can log in');
-                                res.redirect('/users/login');
-                            }).catch(err => console.log(err));
-                        })
-                    });
-                }
-            });
+            promise = Freelancer.findOne({email});
         } else if (userType === USER_TYPE_ATTORNEY) {
+            promise = Attorney.findOne({email});
+        } else if (userType === USER_TYPE_ADMIN) {
+            promise = Admin.findOne({email});
+        }
 
-            Attorney.findOne({ email })
-            .then(user => {
-                if (user) {
-                    errors.push({ msg: 'Email is already reigstered'});
-                    res.render('register', {
-                        errors,
-                        name,
-                        email,
-                        password,
-                        password2,
-                        userType
-                    }); // re-render form in error
-                } else {
-                    // create instance
-                    const newUser = new Attorney({
+        promise.then(user => {
+            if (user) {
+                errors.push({ msg: 'Email is already registered'});
+                res.render('register', {
+                    errors,
+                    name,
+                    email,
+                    password,
+                    password2,
+                    userType
+                }); // re-render form in error
+            } else {
+                // create instance
+
+                let newUser;
+                
+                if (userType === USER_TYPE_FREELANCER) {
+                    newUser = new Freelancer({
                         name,
                         email,
                         password,
                         userType
                     });
-
-                    bcrypt.genSalt(10, (err, salt) => {
-                        bcrypt.hash(newUser.password, salt, (err, hash) => {
-                            if (err) throw err;
-                            newUser.password = hash;
-                            newUser.save().then(user => {
-                                if (user) console.log('users.js - attorney saved successfully');
-                                req.flash('success_msg', 'You are now registered and can log in');
-                                res.redirect('/users/login');
-                            }).catch(err => console.log(err));
-                        })
+                } else if (userType === USER_TYPE_ATTORNEY) {
+                    newUser = new Attorney({
+                        name,
+                        email,
+                        password,
+                        userType
+                    });
+                } else if (userType === USER_TYPE_ADMIN) {
+                    newUser = new Admin({
+                        name,
+                        email,
+                        password,
+                        userType
                     });
                 }
-            });
+            
 
-
-        } // attorney
+                bcrypt.genSalt(10, (err, salt) => {
+                    bcrypt.hash(newUser.password, salt, (err, hash) => {
+                        if (err) throw err;
+                        newUser.password = hash;
+                        newUser.save().then(user => {
+                            if (user) console.log('users.js - user saved successfully');
+                            req.flash('success_msg', 'You are now registered and can log in');
+                            res.redirect('/users/login');
+                        }).catch(err => console.log(err));
+                    })
+                });
+            }
+        });
     }
 });
 
@@ -130,17 +124,26 @@ router.post('/register', (req, res) => {
 router.post('/login', (req, res, next) => {
     console.log('users.js - /login ');
 
-    console.log('-- req.body --');
+    console.log('-- req.body --------->');
     console.log(req.body);
 
     if (req.body.freelancer === 'on' || req.body.freelancer) {
+        
         passport.authenticate('local-freelance', {
             successRedirect: '/dashboard',
             failureRedirect: '/users/login',
             failureFlash: true
         })(req, res, next);
-    } else {
+    } else if (req.body.attorney === 'on' || req.body.attorney) {
+
         passport.authenticate('local-attorney', {
+            successRedirect: '/dashboard',
+            failureRedirect: '/users/login',
+            failureFlash: true
+        })(req, res, next);
+    } else {
+
+        passport.authenticate('local-admin', {
             successRedirect: '/dashboard',
             failureRedirect: '/users/login',
             failureFlash: true

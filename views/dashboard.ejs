@@ -2,6 +2,7 @@
 <%
 const USER_TYPE_FREELANCER = "freelancer";
 const USER_TYPE_ATTORNEY = "attorney";
+const USER_TYPE_ADMIN = "admin";
 %>
 <header role="banner">
         <nav class="navbar navbar-expand-md navbar-dark">
@@ -74,7 +75,7 @@ const USER_TYPE_ATTORNEY = "attorney";
                 </div> 
             <% } %>
     
-            <% if (userType === USER_TYPE_ATTORNEY) { %>
+            <% if (userType === USER_TYPE_ATTORNEY || USER_TYPE_ADMIN) { %>
                 <form id="profileData" method="POST" action="/dashboard">
                 
                     <% if (approval) { %>
@@ -110,7 +111,7 @@ const USER_TYPE_ATTORNEY = "attorney";
             
                     <input type='hidden' id='approval' name='approval' value="<%- approval %>">
                     <input type="hidden" id="userType" name="userType" value="<%- userType %>">
-                    
+
                     <h5>Name</h5>
                     <label name='name' id='name'><%= name %></label>
                     <input type="hidden" id="name" name="name" value="<%- name %>">
