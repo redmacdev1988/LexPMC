@@ -1,5 +1,5 @@
 <div id="admin-container">
-    <h1 class="mt-4">Admin Dashboard</h1>
+    <h1 class="mt-4">Admin Approval Dashboard</h1>
 
         <% if (_message === 'saved') { %>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -11,19 +11,26 @@
         <% } %>
 
         <form id="searchData" method="POST" action="/admin">
-
+            <div id="admin-list-outer">
             <% if (users.length > 0) { %>
-                <ul class="list-group"></ul>
+    
                 <% for (let i = 0; i < users.length; i++) { %>
-                    <li class="list-group-item">
 
-                        <label name="<%-users[i].email%>"> <%- users[i].email%> </label>
-                        <label name="<%- users[i].name%>"> <%- users[i].name%> </label>
-                        <label name="<%- users[i].telephone%>"> <%- users[i].telephone%> </label>
-
-                        <input type="hidden" class="custom-control-input" id="userType" name="userType" value="<%-users[i].userType%>">
-
-                        <!-- Default inline 1-->
+                <div class="card" style="width: 18rem; float:left; margin: 10px;">
+                    <div class="card-body">
+                        <h5 class="card-title"><%- users[i].name%>
+                            <% if (users[i].userType === "freelancer") { %>
+                                <span class="badge badge-primary"><%- users[i].userType%></span>
+                            <% } else if (users[i].userType === "attorney") { %>
+                                <span class="badge badge-success"><%- users[i].userType%></span>
+                            <% } %>
+                        </h5>
+                        <h6 class="card-subtitle mb-2 text-muted" style="width: 100%; float:left">
+                            <span style="float:left"><%- users[i].email%></span> 
+                            <span style="float:right"><%- users[i].telephone%></span>
+                        </h6>
+                       
+                        <!-- approved checkbox -->
                         <div class="custom-control custom-checkbox">
                             <% if (users[i].approval === 'false' || users[i].approval === false) { %>
                                 <!-- approved box should be empty -->
@@ -35,8 +42,8 @@
                                 <label class="custom-control-label" for="<%-users[i].email%>_approve">approved</label>
                             <% } %>
                         </div>
-                    
-                        <!-- Default inline 2-->
+                
+                        <!-- not approved checkbox -->
                         <div class="custom-control custom-checkbox">
                             <% if (users[i].approval === 'true' || users[i].approval === true) { %>
                                 <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_disapprove" name="<%-users[i].email%>_disapprove">
@@ -46,13 +53,17 @@
                                 <label class="custom-control-label" for="<%-users[i].email%>_disapprove">not approved</label>
                             <% } %>
                         </div>
+                    </div>
+                </div>
 
-                    </li>
+                <input type="hidden" class="custom-control-input" id="userType" name="userType" value="<%-users[i].userType%>">
+  
                 <% } %>
-                </ul>
             <% } %>
 
+            </div>
             <button type="submit" class="btn btn-primary">Save</button>
+
         </form>
 
         <a href="/users/logout" class="btn btn-secondary">Logout</a> 

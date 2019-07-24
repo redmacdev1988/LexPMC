@@ -53,3 +53,24 @@ a.registerGreen:hover {
     padding: 50px;
     margin: 10px;
 }
+
+#login-radio-outer {
+    width: 100%;
+    float:left;
+
+    border-bottom: 1px solid lightgray;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+#login-radio-outer .custom-control {
+    float:left;
+    width: 30%;
+    text-align: center;
+}
+
+#admin-list-outer {
+    padding: 10px;
+    float:left;
+    width:100%;
+}

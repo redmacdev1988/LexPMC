@@ -28,15 +28,8 @@ router.get('/register', (req, res) => {
 router.post('/register', (req, res) => {
     
     const { name, email, password, password2, isAttorney, isFreelancer } = req.body;
-    let bFreelancer = (isFreelancer == 'on') ? true: false;
-    let bAttorney = (isAttorney == 'on') ? true: false;
 
-    let userType;
-    if (!bFreelancer && !bAttorney) {
-        userType = USER_TYPE_ADMIN;
-    } else {
-        userType = (bFreelancer) ? USER_TYPE_FREELANCER : USER_TYPE_ATTORNEY;
-    }
+    let userType = req.body.userType;
 
     let errors = [];
     if (!email || !name || !password || !password2) { errors.push({msg: 'please fill in all fields'}); }
@@ -103,7 +96,6 @@ router.post('/register', (req, res) => {
                     });
                 }
             
-
                 bcrypt.genSalt(10, (err, salt) => {
                     bcrypt.hash(newUser.password, salt, (err, hash) => {
                         if (err) throw err;
@@ -122,19 +114,16 @@ router.post('/register', (req, res) => {
 
 // Login Handle
 router.post('/login', (req, res, next) => {
-    console.log('users.js - /login ');
+    console.log('users.js - /login -------');
 
-    console.log('-- req.body --------->');
-    console.log(req.body);
-
-    if (req.body.freelancer === 'on' || req.body.freelancer) {
+    if (req.body.userType == USER_TYPE_FREELANCER) {
         
         passport.authenticate('local-freelance', {
             successRedirect: '/dashboard',
             failureRedirect: '/users/login',
             failureFlash: true
         })(req, res, next);
-    } else if (req.body.attorney === 'on' || req.body.attorney) {
+    } else if (req.body.userType == USER_TYPE_ATTORNEY) {
 
         passport.authenticate('local-attorney', {
             successRedirect: '/dashboard',
@@ -142,14 +131,12 @@ router.post('/login', (req, res, next) => {
             failureFlash: true
         })(req, res, next);
     } else {
-
         passport.authenticate('local-admin', {
             successRedirect: '/dashboard',
             failureRedirect: '/users/login',
             failureFlash: true
         })(req, res, next);
     }
-
 });
 
 
