@@ -1,63 +1,63 @@
+<% if (_message === 'saved') { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>Success!</strong> Your information has been saved
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div> 
+<% } %>
+
 <div id="admin-container">
     <h1 class="mt-4">Admin Approval Dashboard</h1>
-
-        <% if (_message === 'saved') { %>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <strong>Success!</strong> Your information has been saved
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div> 
-        <% } %>
-
         <form id="searchData" method="POST" action="/admin">
             <div id="admin-list-outer">
             <% if (users.length > 0) { %>
     
                 <% for (let i = 0; i < users.length; i++) { %>
+       
+                    <div class="card" style="width: 18rem; float:left; margin: 10px;">
+                        <div class="card-body">
+                                <span><%- users[i].approval%></span>
 
-                <div class="card" style="width: 18rem; float:left; margin: 10px;">
-                    <div class="card-body">
-                        <h5 class="card-title"><%- users[i].name%>
-                            <% if (users[i].userType === "freelancer") { %>
-                                <span class="badge badge-primary"><%- users[i].userType%></span>
-                            <% } else if (users[i].userType === "attorney") { %>
-                                <span class="badge badge-success"><%- users[i].userType%></span>
-                            <% } %>
-                        </h5>
-                        <h6 class="card-subtitle mb-2 text-muted" style="width: 100%; float:left">
-                            <span style="float:left"><%- users[i].email%></span> 
-                            <span style="float:right"><%- users[i].telephone%></span>
-                        </h6>
-                       
-                        <!-- approved checkbox -->
-                        <div class="custom-control custom-checkbox">
-                            <% if (users[i].approval === 'false' || users[i].approval === false) { %>
-                                <!-- approved box should be empty -->
-                                <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_approve" name="<%-users[i].email%>_approve">
-                                <label class="custom-control-label" for="<%-users[i].email%>_approve">approved</label>
-                            <% } else { %>
-                                <!-- approved box should be checked -->
-                                <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_approve" name="<%-users[i].email%>_approve" checked>
-                                <label class="custom-control-label" for="<%-users[i].email%>_approve">approved</label>
-                            <% } %>
-                        </div>
-                
-                        <!-- not approved checkbox -->
-                        <div class="custom-control custom-checkbox">
-                            <% if (users[i].approval === 'true' || users[i].approval === true) { %>
-                                <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_disapprove" name="<%-users[i].email%>_disapprove">
-                                <label class="custom-control-label" for="<%-users[i].email%>_disapprove">not approved</label>
-                            <% } else { %>
-                                <input type="checkbox" class="custom-control-input" id="<%-users[i].email%>_disapprove" name="<%-users[i].email%>_disapprove" checked>
-                                <label class="custom-control-label" for="<%-users[i].email%>_disapprove">not approved</label>
-                            <% } %>
+                            <h5 class="card-title"><%- users[i].name%>
+                                <% if (users[i].userType === "freelancer") { %>
+                                    <span class="badge badge-primary"><%- users[i].userType%></span>
+                                <% } else if (users[i].userType === "attorney") { %>
+                                    <span class="badge badge-success"><%- users[i].userType%></span>
+                                <% } %>
+                            </h5>
+                            <h6 class="card-subtitle mb-2 text-muted" style="width: 100%; float:left">
+                                <span style="float:left"><%- users[i].email%></span> 
+                                <span style="float:right"><%- users[i].telephone%></span>
+                            </h6>
+                        
+                            <div class="custom-control custom-checkbox">
+
+                                <% if (users[i].approval) { %>
+                              
+                                    <input  type="checkbox" 
+                                            class="custom-control-input" 
+                                            id  ="<%-users[i].email%>_<%-users[i].userType%>" 
+                                            name="<%-users[i].email%>_<%-users[i].userType%>" 
+                                            checked />
+
+                                <% } else { %>
+
+                                    <input  type="checkbox" 
+                                            class="custom-control-input" 
+                                            id  ="<%-users[i].email%>_<%-users[i].userType%>" 
+                                            name="<%-users[i].email%>_<%-users[i].userType%>" 
+                                            unchecked />
+
+                                <% } %>
+                                <label class="custom-control-label" for="<%-users[i].email%>_<%-users[i].userType%>">approve</label>
+                            </div>
+
                         </div>
                     </div>
-                </div>
 
-                <input type="hidden" class="custom-control-input" id="userType" name="userType" value="<%-users[i].userType%>">
-  
+                    <input type="hidden" class="custom-control-input" id="userEmail" name="userEmail" value="<%-users[i].email%>_<%-users[i].userType%>">
+    
                 <% } %>
             <% } %>
 
@@ -68,3 +68,5 @@
 
         <a href="/users/logout" class="btn btn-secondary">Logout</a> 
     </div>
+
+    <% include ./partials/loader %>

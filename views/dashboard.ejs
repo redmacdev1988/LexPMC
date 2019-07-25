@@ -28,7 +28,6 @@ const USER_TYPE_ADMIN = "admin";
                 <% }  else { %>
                     <span class='badge badge-success'>Approved</span>
                 <% } %>
-
             </h1>
     
             <% if (_message === 'saved') { %>
@@ -39,7 +38,7 @@ const USER_TYPE_ADMIN = "admin";
                     </button>
                 </div> 
             <% } %>
-    
+            
             <% if (userType === USER_TYPE_ATTORNEY) { %>
                 <form id="profileData" method="POST" action="/dashboard">
                 
