@@ -113,10 +113,13 @@ router.get('/dashboard', ensureAuthenticated, (req, res) => {
 });
 
 router.post("/dashboard", (req, res) => {
+    console.log(`youve reached dashbaord`);
     const { userType } = req.body;
+
     if (userType == USER_TYPE_FREELANCER) {
         gSchemaDo.setData(Freelancer, req.body, req.user, res);
     } else if (userType == USER_TYPE_ATTORNEY) {
+        console.log('-- setting data for attorney ---');
         gSchemaDo.setData(Attorney, req.body, req.user, res);
     } else if (userType == USER_TYPE_ADMIN) {
         gSchemaDo.setData(Admin, req.body, req.user, res);
@@ -244,13 +247,13 @@ let gSchemaDo = (function SetUserData() {
                         _setFreelancerObject(found, bodyData, bodyUser, res);
                         break;
                     case USER_TYPE_ATTORNEY:
-                        _setAttorneyObject(found);
+                        _setAttorneyObject(found, bodyData, bodyUser, res);
                         break;
                     case USER_TYPE_ADMIN:
-                        _setAdminObject(found);
+                        _setAdminObject(found, bodyData, bodyUser, res);
                         break;
                 }
-            }
+            } 
         });
     }
     return {
